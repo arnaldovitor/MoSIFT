@@ -81,41 +81,48 @@ def gen_hof(x, y, frame, next_frame):
     return hof
 
 
-def gen_mosift_features(video_path, lambd):
-    print(video_path)
+def gen_mosift_features(video_path, lambd, interval):
     frames = count_frames(video_path)
     mosift_descriptors = []
 
-    for i in range(1, frames-1):
-        print("# frame: "+str(i))
-        ret, frame = capture_frame(video_path, i)
-        ret, next_frame = capture_frame(video_path, i+1)
-        keypoints, descriptors = gen_sift_features(frame)
-        keypoints_xy = keypoints_to_coordinates(keypoints)
-        keypoints_xy = np.float32(np.array(keypoints_xy)[:, np.newaxis, :])
-        p1, st, err = cv.calcOpticalFlowPyrLK(frame, next_frame, keypoints_xy, None, **lk_params)
-        sm_keypoints_xy, sm_keypoints, sm_descriptors = has_sufficient_motion(keypoints_xy, keypoints, descriptors, p1, lambd)
+    for i in range(1, frames-1, interval):
+        try:
+            ret, frame = capture_frame(video_path, i)
+            ret, next_frame = capture_frame(video_path, i+1)
+            keypoints, descriptors = gen_sift_features(frame)
+            keypoints_xy = keypoints_to_coordinates(keypoints)
+            keypoints_xy = np.float32(np.array(keypoints_xy)[:, np.newaxis, :])
+            p1, st, err = cv.calcOpticalFlowPyrLK(frame, next_frame, keypoints_xy, None, **lk_params)
+            sm_keypoints_xy, sm_keypoints, sm_descriptors = has_sufficient_motion(keypoints_xy, keypoints, descriptors, p1, lambd)
 
-        for j in range(len(sm_keypoints)):
-            hof = np.array(gen_hof(sm_keypoints_xy[j][0], sm_keypoints_xy[j][1], frame, next_frame))
-            mosift_descriptors.append(list(np.concatenate((sm_descriptors[j], hof))))
+            for j in range(len(sm_keypoints)):
+                hof = np.array(gen_hof(sm_keypoints_xy[j][0], sm_keypoints_xy[j][1], frame, next_frame))
+                mosift_descriptors.append(list(np.concatenate((sm_descriptors[j], hof))))
+        except:
+            print('Exception in '+video_path+', frame '+str(i))
 
     return mosift_descriptors
 
 
-def videos_to_vectors(input_path, output_path, lambd, dict_directory):
+def run_feature_extractor(input_path, output_path, lambd, interval, dict_directory):
     listing = os.listdir(input_path)
-
+    progress_count = 0
     for video_name in listing:
+        progress_count += 1
+        print("# progress: "+str(progress_count)+'/'+str(len(listing)))
         video_path = input_path+video_name
 
         if dict_directory:
-            df_dict = pd.DataFrame(gen_mosift_features(video_path, lambd))
+            df_dict = pd.DataFrame(gen_mosift_features(video_path, lambd, interval))
             df_dict.to_csv(output_path+"dict.csv", mode='a', header=False, index=False)
         else:
-            df_mosift_features = pd.DataFrame(gen_mosift_features(video_path, lambd))
+            df_mosift_features = pd.DataFrame(gen_mosift_features(video_path, lambd, interval))
             df_mosift_features.to_csv(output_path+video_name[:-4]+".csv", mode='a', header=False, index=False)
 
 
 if __name__ == '__main__':
-    videos_to_vectors(r"/home/user/input_path/", r"/home/user/output_path/", 3, True)
+    run_feature_extractor(r"/home/arnaldo/Documentos/aie-dataset-separada/dict/", r"/home/arnaldo/Documentos/aie-dataset-separada/csv/", 1, 4, True)
+    run_feature_extractor(r"/home/arnaldo/Documentos/aie-dataset-separada/validation/assault/", r"/home/arnaldo/Documentos/aie-dataset-separada/csv/assault/", 1, 4, False)
+    run_feature_extractor(r"/home/arnaldo/Documentos/aie-dataset-separada/validation/non-assault/", r"/home/arnaldo/Documentos/aie-dataset-separada/csv/non-assault/", 1, 4, False)
+
+

@@ -29,8 +29,10 @@ def gen_vbow(input_path, output_name, kmeans, class_id):
 
 
 if __name__ == '__main__':
-    dict = pd.read_csv("dict.csv")
-    kmeans = clustering(dict, 10, 50)
-    gen_vbow(r"/home/user/input_path/", "output_name", kmeans)
+    dict = pd.read_csv(r"/home/arnaldo/Documentos/aie-dataset-separada/csv/dict.csv")
+    kmeans = clustering(dict, 500, 64)
+    gen_vbow(r"/home/arnaldo/Documentos/aie-dataset-separada/csv/assault/", r"/home/arnaldo/Documentos/aie-dataset-separada/csv/assault_validation", kmeans, 1)
+    gen_vbow(r"/home/arnaldo/Documentos/aie-dataset-separada/csv/non-assault/", r"/home/arnaldo/Documentos/aie-dataset-separada/csv/non_assault_validation", kmeans, 0)
+
 
 
