@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import os
 import util
+import random
 
 # params for ShimTomasi corner detection
 feature_params = dict( maxCorners = 100,
@@ -81,7 +82,7 @@ def gen_hof(x, y, frame, next_frame):
     return hof
 
 
-def gen_mosift_features(video_path, lambd, interval):
+def gen_mosift_features(video_path, lambd, interval, sample_size):
     frames = count_frames(video_path)
     mosift_descriptors = []
 
@@ -101,10 +102,12 @@ def gen_mosift_features(video_path, lambd, interval):
         except:
             print('Exception in '+video_path+', frame '+str(i))
 
-    return mosift_descriptors
+    random_mosift_descriptors = random.sample(mosift_descriptors, k=int(len(mosift_descriptors)*sample_size))
+
+    return random_mosift_descriptors
 
 
-def run_feature_extractor(input_path, output_path, lambd, interval, dict_directory):
+def run_feature_extractor(input_path, output_path, lambd, interval, dict_directory, sample_size):
     listing = os.listdir(input_path)
     progress_count = 0
     for video_name in listing:
@@ -113,16 +116,16 @@ def run_feature_extractor(input_path, output_path, lambd, interval, dict_directo
         video_path = input_path+video_name
 
         if dict_directory:
-            df_dict = pd.DataFrame(gen_mosift_features(video_path, lambd, interval))
+            df_dict = pd.DataFrame(gen_mosift_features(video_path, lambd, interval, sample_size))
             df_dict.to_csv(output_path+"dict.csv", mode='a', header=False, index=False)
         else:
-            df_mosift_features = pd.DataFrame(gen_mosift_features(video_path, lambd, interval))
+            df_mosift_features = pd.DataFrame(gen_mosift_features(video_path, lambd, interval, sample_size))
             df_mosift_features.to_csv(output_path+video_name[:-4]+".csv", mode='a', header=False, index=False)
 
 
 if __name__ == '__main__':
-    run_feature_extractor(r"/home/arnaldo/Documentos/aie-dataset-separada/dict/", r"/home/arnaldo/Documentos/aie-dataset-separada/csv/", 1, 4, True)
-    run_feature_extractor(r"/home/arnaldo/Documentos/aie-dataset-separada/validation/assault/", r"/home/arnaldo/Documentos/aie-dataset-separada/csv/assault/", 1, 4, False)
-    run_feature_extractor(r"/home/arnaldo/Documentos/aie-dataset-separada/validation/non-assault/", r"/home/arnaldo/Documentos/aie-dataset-separada/csv/non-assault/", 1, 4, False)
+    run_feature_extractor(r"/home/arnaldo/Documentos/rwf-indoor-dataset-separada/dict/", r"/home/arnaldo/Documentos/rwf-indoor-dataset-separada/csv/", 0.7, 1, True, 0.2)
+    run_feature_extractor(r"/home/arnaldo/Documentos/rwf-indoor-dataset-separada/validation/assault/", r"/home/arnaldo/Documentos/rwf-indoor-dataset-separada/csv/assault/", 0.7, 1, False, 1)
+    run_feature_extractor(r"/home/arnaldo/Documentos/rwf-indoor-dataset-separada/validation/non-assault/", r"/home/arnaldo/Documentos/rwf-indoor-dataset-separada/csv/non-assault/", 0.7, 1, False, 1)
 
 

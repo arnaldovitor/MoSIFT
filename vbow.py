@@ -21,18 +21,20 @@ def gen_vbow(input_path, output_name, kmeans, class_id):
     vbow = []
     listing = os.listdir(input_path)
     for csv_name in listing:
-        feature_vectors = pd.read_csv(input_path+csv_name)
-        histogram = gen_histogram(feature_vectors, kmeans)
-        histogram = np.append(histogram, class_id)
-        vbow.append(histogram)
+        try:
+            feature_vectors = pd.read_csv(input_path+csv_name)
+            histogram = gen_histogram(feature_vectors, kmeans)
+            histogram = np.append(histogram, class_id)
+            vbow.append(histogram)
+        except:
+            print('Exception in '+input_path+csv_name)
+
     np.savetxt(output_name+".csv", vbow, delimiter=",")
 
 
 if __name__ == '__main__':
-    dict = pd.read_csv(r"/home/arnaldo/Documentos/aie-dataset-separada/csv/dict.csv")
-    kmeans = clustering(dict, 500, 64)
-    gen_vbow(r"/home/arnaldo/Documentos/aie-dataset-separada/csv/assault/", r"/home/arnaldo/Documentos/aie-dataset-separada/csv/assault_validation", kmeans, 1)
-    gen_vbow(r"/home/arnaldo/Documentos/aie-dataset-separada/csv/non-assault/", r"/home/arnaldo/Documentos/aie-dataset-separada/csv/non_assault_validation", kmeans, 0)
-
-
-
+    dict = pd.read_csv(r"/home/arnaldo/Documentos/rwf-indoor-dataset-separada/csv/dict.csv")
+    kmeans = clustering(dict, 500, 32)
+    print("# clustering ended")
+    gen_vbow(r"/home/arnaldo/Documentos/rwf-indoor-dataset-separada/csv/assault/", r"/home/arnaldo/Documentos/rwf-indoor-dataset-separada/csv/assault_validation", kmeans, 1)
+    gen_vbow(r"/home/arnaldo/Documentos/rwf-indoor-dataset-separada/csv/non-assault/", r"/home/arnaldo/Documentos/rwf-indoor-dataset-separada/csv/non_assault_validation", kmeans, 0)
